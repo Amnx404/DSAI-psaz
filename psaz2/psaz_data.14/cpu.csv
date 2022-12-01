@@ -1,0 +1,3 @@
+total,user,nice,system,idle,iowait,irq,softirq,steal,guest,guest_nice,time_since_update,cpucore,ctx_switches,interrupts,soft_interrupts,syscalls,iteration&time
+1.6,1.2,0.0,0.1,98.4,0.0,0.0,0.3,0.0,0.0,0.0,2.3631327152252197,8,1101,814,634,0,1:1667388505.5199273
+1.6,1.2,0.0,0.2,98.3,0.0,0.0,0.3,0.0,0.0,0.0,2.3396055698394775,8,1419,1025,742,0,2:1667388506.7427082

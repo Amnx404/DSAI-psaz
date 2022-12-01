@@ -1,0 +1,4 @@
+label,value,unit,status,type,key,iteration&time
+Battery,100,%,Charging,battery,label,1:1667124808.9666584
+Battery,100,%,Charging,battery,label,2:1667124829.1641915
+Battery,100,%,Charging,battery,label,3:1667124849.3136764

@@ -1,0 +1,2 @@
+device_name,fs_type,mnt_point,size,used,free,percent,key,iteration&time
+/dev/sdc,ext4,/,269490393088,6050770944,249678950400,2.4,mnt_point,1:1667130813.6168842

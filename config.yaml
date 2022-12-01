@@ -1,0 +1,4 @@
+data_collection_interval : 1
+data_directory_isize : 5
+data_dir : psaz2
+data_retention : 100

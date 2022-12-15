@@ -7,43 +7,43 @@ import requests
 import glob
 import shutil
 import sys
+import configparser
 
 def configuration(config_file):
-    with open(config_file) as f:
-        data = yaml.load(f, Loader = SafeLoader)
-        interval = data['data_collection_interval']
-        isize = data['data_directory_isize']
-        datadir = data['data_dir']
-        retention = data['data_retention']
-        return interval, isize, datadir, retention
+    config = configparser.ConfigParser()
+    config.read('psaz.conf')
+    di = int(config['psaz']['data_interval'])
+    dg = int(config['psaz']['data_directory_isize'])
+    dd = config['psaz']['data_dir']
+    dr = int(config['psaz']['data_retention'])
+    return di,dg,dd,dr
     
 def get_data(context):
     response = requests.get('http://localhost:61208/api/3/'+context)
-    return process_response(response)
+    return process_response(response,context)
 
 
-def process_response(response):
-    """
-    It takes a response object, converts it to JSON, normalizes the JSON, and then converts it to a
-    Pandas dataframe
-    
-    :param response: the response object from the API call
-    :return: A dataframe
-    """
+def process_response(response,context):
     data = response.json()
     data = pd.json_normalize(data)
-    df = pd.DataFrame.from_dict(data)
-    return df
+    data = pd.DataFrame.from_dict(data)
+    if context == 'processlist':
+        data['readio'] = data['io_counters'].apply(lambda x: x[0]-x[2], axis=1)
+        data['writeio'] = data['io_counters'].apply(lambda x: x[1]-x[3], axis=1)
+        data['rss'] = data['memory_info'].apply(lambda x: x[0], axis=1)
+        data['vms'] = data['memory_info'].apply(lambda x: x[1], axis=1)
+        data['shared'] = data['memory_info'].apply(lambda x: x[2], axis=1)
+        data['text'] = data['memory_info'].apply(lambda x: x[3], axis=1)
+        data['data'] = data['memory_info'].apply(lambda x: x[4], axis=1)
+        data['cpu-user'] = data['cpu_times'].apply(lambda x: x[0], axis=1)
+        data['cpu-system'] = data['cpu_times'].apply(lambda x: x[1], axis=1)
+        data['cpu-cuser'] = data['cpu_times'].apply(lambda x: x[2], axis=1)
+        data['cpu-csystem'] = data['cpu_times'].apply(lambda x: x[3], axis=1)
+        data.drop(['io_counters','memory_info','cpu_times','num_ctx_switches'], axis=1, inplace=True)
+        return data
+    return data
 
 def retention_check(datadir, retention = 100):
-    """
-    It takes a directory name as input, and removes all the subdirectories in that directory that are
-    older than a certain number of days
-    
-    :param datadir: The directory where the data is stored
-    :param retention: The number of days to keep the data, defaults to 100 (optional)
-    :return: The high and low values of the data directory
-    """
     files = glob.glob(os.path.join(data_dir,'psaz_data.*'))
     if len(files)==0:
         return 1,1
@@ -55,9 +55,7 @@ def retention_check(datadir, retention = 100):
     for i in range(low, high - retention+1):
         shutil.rmtree(os.path.join(datadir,'psaz_data.' + str(i)))
         print("Directory removed : "+str(i))
-     
     return high,low
-
 
 #Setting the initial variables in place
 config_file = str(sys.argv[1])
@@ -106,13 +104,11 @@ while True:
         dict[i].to_csv(os.path.join(data_dir,'psaz_data.' + str(i_temp),i+'.csv'), index=False)
     #cpu.to_csv(os.path.join(data_dir,'psaz_data.' + str(i_temp), 'cpu.csv'))  
 
-    
     if len(dict['cpu']) == i_size:
         for i in dict:
             dict[i] = pd.DataFrame()    
         i_temp += 1 
         obs_no = 1  
          
-    
     
     time.sleep(interval)
